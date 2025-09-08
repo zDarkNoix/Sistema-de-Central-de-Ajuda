@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <title>Painel de Registro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-color-dark: #0d1117;
+      --bg-color-light: #161b22;
+      --border-color: #30363d;
+      --primary-text-color: #c9d1d9;
+      --secondary-text-color: #8b949e;
+      --accent-color: #58a6ff;
+      --font-family-main: 'Poppins', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-family-main);
+      background-color: var(--bg-color-dark);
+      color: var(--primary-text-color);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 2rem;
+      background-image: radial-gradient(circle at 1px 1px, var(--border-color) 1px, transparent 0);
+      background-size: 20px 20px;
+    }
+    
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-color-dark); }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+    #messageBox {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--bg-color-light);
+      color: var(--primary-text-color);
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      border: 1px solid var(--border-color);
+    }
+    #messageBox.error {
+      background-color: #da3633;
+      color: #ffffff;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 64rem;
+      background: rgba(22, 27, 34, 0.9);
+      backdrop-filter: blur(10px) saturate(180%);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      padding: 2rem;
+    }
+
+    #formTitle {
+      font-size: 2.25rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 2rem;
+      background: linear-gradient(90deg, #338dff, #9955ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .edit-line-section {
+      background-color: rgba(0,0,0,0.2);
+      padding: 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    @media (min-width: 768px) {
+      .edit-line-section {
+        flex-direction: row;
+        justify-content: center;
+      }
+    }
+    .edit-line-section label {
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .edit-line-section input {
+      background-color: var(--bg-color-light);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      color: var(--primary-text-color);
+      width: 6rem;
+      text-align: center;
+    }
+    .edit-line-section button {
+        background-color: var(--accent-color);
+        color: #ffffff;
+        font-weight: 700;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: background-color 0.2s ease;
+    }
+    .edit-line-section button:hover {
+        background-color: #79c0ff;
+    }
+
+    #registerForm {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 768px) {
+      .form-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .form-field label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .form-field input[type="text"], .form-field textarea {
+      width: 100%;
+      background-color: var(--bg-color-light);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      color: var(--primary-text-color);
+      transition: all 0.2s ease;
+    }
+    
+    .form-field textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .form-field input[type="text"]:focus, .form-field textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.5);
+    }
+
+    .add-block-buttons-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    @media (min-width: 640px) {
+      .add-block-buttons-container { flex-direction: row; }
+    }
+
+    .styled-button {
+      color: #ffffff;
+      font-weight: 700;
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .styled-button:hover { transform: translateY(-2px); }
+    
+    .add-text-block-button { background-color: #2563eb; }
+    .add-text-block-button:hover { box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
+    
+    .add-interactive-block-button { background-color: #16a34a; }
+    .add-interactive-block-button:hover { box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3); }
+
+    #contentBlocksContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .content-block-item {
+      background-color: rgba(0,0,0,0.2);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border-color);
+    }
+    
+    .block-options-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        border-bottom: 1px dashed var(--border-color);
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    @media (min-width: 768px) {
+      .block-options-grid { grid-template-columns: 1fr 1fr; }
+    }
+    
+    .block-checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .remove-block-button {
+      background-color: #da3633;
+    }
+
+    .interactive-grid {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 768px) {
+      .interactive-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    #modalDefinitionsContainer {
+        border-top: 1px solid var(--border-color);
+        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+        display: none;
+    }
+    #modalDefinitionsContainer.show { display: block; }
+    #modalDefinitionsContainer h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .modal-definition-block {
+      background-color: rgba(88, 166, 255, 0.1);
+      border: 1px dashed var(--accent-color);
+      padding: 1rem;
+      border-radius: 0.75rem;
+      margin-top: 1rem;
+      position: relative;
+    }
+    
+    .remove-modal-def-button {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background-color: #da3633;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    .add-modal-button {
+      background-color: #6d28d9;
+    }
+    .add-modal-button:hover {
+      box-shadow: 0 4px 15px rgba(109, 40, 217, 0.3);
+    }
+
+    .save-data-button {
+        background: linear-gradient(90deg, #1f6feb, #9f55ff);
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+    }
+    .save-data-button:hover {
+        box-shadow: 0 6px 20px rgba(52, 144, 255, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div id="messageBox"></div>
+
+  <div id="app">
+    <h1 id="formTitle">Registro de Informações</h1>
+
+    <div class="edit-line-section">
+        <label for="lineNumberInput">Editar Linha (Número):</label>
+        <input type="text" id="lineNumberInput" placeholder="Ex: 2" autocomplete="off">
+        <button type="button" id="loadForEditButton">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V12h2.293z"/>
+            </svg>
+            Carregar
+        </button>
+    </div>
+
+    <form id="registerForm" autocomplete="off">
+      <input type="hidden" id="hiddenRowIndex">
+      
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="categoria">Categoria:</label>
+          <input type="text" id="categoria" name="categoria" placeholder="Ex: B-SIDE, C-SIDE" required autocomplete="off">
+        </div>
+        <div class="form-field">
+          <label for="topico">Tópico:</label>
+          <input type="text" id="topico" name="topico" placeholder="Ex: Finanças, Marketing" required autocomplete="off">
+        </div>
+        <div class="form-field">
+          <label for="assunto">Assunto:</label>
+          <input type="text" id="assunto" name="assunto" placeholder="Ex: Orçamento Mensal" required autocomplete="off">
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Conteúdo da Informação:</label>
+        <div class="add-block-buttons-container">
+            <button type="button" id="addTextBlock" class="styled-button add-text-block-button">Adicionar Bloco de Texto</button>
+            <button type="button" id="addInteractiveBlock" class="styled-button add-interactive-block-button">Adicionar Bloco Interativo</button>
+        </div>
+        <div id="contentBlocksContainer"></div>
+      </div>
+
+      <div id="modalDefinitionsContainer">
+          <h2>Definições de Modais</h2>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="submit" class="styled-button save-data-button">Salvar Dados</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const registerForm = document.getElementById('registerForm');
+    const contentBlocksContainer = document.getElementById('contentBlocksContainer');
+    const modalDefinitionsContainer = document.getElementById('modalDefinitionsContainer');
+    const addTextBlockButton = document.getElementById('addTextBlock');
+    const addInteractiveBlockButton = document.getElementById('addInteractiveBlock');
+    const messageBox = document.getElementById('messageBox');
+    const formTitle = document.getElementById('formTitle');
+    const lineNumberInput = document.getElementById('lineNumberInput');
+    const loadForEditButton = document.getElementById('loadForEditButton');
+    const hiddenRowIndex = document.getElementById('hiddenRowIndex');
+
+    let blockCounter = 0;
+    let modalCounter = 0;
+
+    function showMessage(message, isError = false) {
+      messageBox.textContent = message;
+      messageBox.className = (isError ? 'error' : '');
+      messageBox.style.display = 'block';
+      messageBox.style.opacity = 1;
+      setTimeout(() => {
+        messageBox.style.opacity = 0;
+        setTimeout(() => { messageBox.style.display = 'none'; }, 500);
+      }, 3500);
+    }
+
+    function resetForm() {
+        registerForm.reset();
+        contentBlocksContainer.innerHTML = '';
+        modalDefinitionsContainer.innerHTML = '<h2>Definições de Modais</h2>';
+        modalDefinitionsContainer.style.display = 'none';
+        modalDefinitionsContainer.classList.remove('show');
+        blockCounter = 0;
+        modalCounter = 0;
+        hiddenRowIndex.value = '';
+        formTitle.textContent = 'Registro de Informações';
+        lineNumberInput.value = '';
+    }
+
+    function addTextBlock(content = '', textBlockId = '', globalId = '', groupId = '') {
+      blockCounter++;
+      const blockDiv = document.createElement('div');
+      blockDiv.className = 'content-block-item';
+      blockDiv.innerHTML = `
+        <div class="block-options-grid">
+            <div>
+                <div class="block-checkbox-group">
+                    <input type="checkbox" id="is-text-block-id-${blockCounter}" data-type="is-text-block-id" ${textBlockId ? 'checked' : ''}>
+                    <label for="is-text-block-id-${blockCounter}">Adicionar ID ao Bloco?</label>
+                </div>
+                <div class="form-field" style="display: ${textBlockId ? 'block' : 'none'};">
+                    <input type="text" id="text-block-id-${blockCounter}" data-type="text-block-id" placeholder="ID para referência interna" value="${textBlockId || ''}" autocomplete="off">
+                </div>
+            </div>
+            <div>
+                <div class="block-checkbox-group">
+                    <input type="checkbox" id="has-global-id-text-${blockCounter}" data-type="has-global-id" ${globalId ? 'checked' : ''}>
+                    <label for="has-global-id-text-${blockCounter}">Adicionar ID Global?</label>
+                </div>
+                <div class="form-field" style="display: ${globalId ? 'block' : 'none'};">
+                    <input type="text" id="global-id-text-${blockCounter}" data-type="global-id" placeholder="ID para links diretos" value="${globalId || ''}" autocomplete="off">
+                </div>
+            </div>
+            <div>
+                <div class="block-checkbox-group">
+                    <input type="checkbox" id="has-group-id-text-${blockCounter}" data-type="has-group-id" ${groupId ? 'checked' : ''}>
+                    <label for="has-group-id-text-${blockCounter}">Agrupar este bloco?</label>
+                </div>
+                <div class="form-field" style="display: ${groupId ? 'block' : 'none'};">
+                    <input type="text" id="group-id-text-${blockCounter}" data-type="group-id" placeholder="ID do Grupo" value="${groupId || ''}" autocomplete="off">
+                </div>
+            </div>
+        </div>
+        <div class="form-field">
+            <label for="text-block-${blockCounter}">Conteúdo do Texto Simples (Markdown):</label>
+            <textarea id="text-block-${blockCounter}" class="text-content-area" data-type="text" required placeholder="Use **negrito**, listas com - e código com &#96;&#96;&#96;..." autocomplete="off"></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem; gap: 0.5rem;">
+            <button type="button" class="styled-button add-modal-button" data-target-textarea="text-block-${blockCounter}">Add Modal</button>
+            <button type="button" class="styled-button remove-block-button">Remover</button>
+        </div>
+      `;
+      contentBlocksContainer.appendChild(blockDiv);
+      blockDiv.querySelector(`#text-block-${blockCounter}`).value = content;
+      setupTextBlockListeners(blockDiv);
+    }
+
+    function setupTextBlockListeners(blockDiv) {
+        const isTextBlockIdCheckbox = blockDiv.querySelector(`input[data-type="is-text-block-id"]`);
+        const textBlockIdContainer = blockDiv.querySelector(`input[data-type="text-block-id"]`).parentElement;
+        isTextBlockIdCheckbox.addEventListener('change', () => {
+            textBlockIdContainer.style.display = isTextBlockIdCheckbox.checked ? 'block' : 'none';
+            if (!isTextBlockIdCheckbox.checked) textBlockIdContainer.querySelector('input').value = '';
+        });
+
+        const hasGlobalIdCheckbox = blockDiv.querySelector(`input[data-type="has-global-id"]`);
+        const globalIdContainer = blockDiv.querySelector(`input[data-type="global-id"]`).parentElement;
+        hasGlobalIdCheckbox.addEventListener('change', () => {
+            globalIdContainer.style.display = hasGlobalIdCheckbox.checked ? 'block' : 'none';
+            if (!hasGlobalIdCheckbox.checked) globalIdContainer.querySelector('input').value = '';
+        });
+
+        const hasGroupIdCheckbox = blockDiv.querySelector(`input[data-type="has-group-id"]`);
+        const groupIdContainer = blockDiv.querySelector(`input[data-type="group-id"]`).parentElement;
+        hasGroupIdCheckbox.addEventListener('change', () => {
+            groupIdContainer.style.display = hasGroupIdCheckbox.checked ? 'block' : 'none';
+            if (!hasGroupIdCheckbox.checked) groupIdContainer.querySelector('input').value = '';
+        });
+
+        addRemoveBlockListener(blockDiv);
+        addModalButtonListener(blockDiv.querySelector('.add-modal-button'));
+    }
+
+    function addInteractiveBlock(blockData = {}) {
+      blockCounter++;
+      const blockDiv = document.createElement('div');
+      blockDiv.className = 'content-block-item interactive-block';
+      
+      let questionText = (blockData.sections && blockData.sections[0].questionText) || '';
+      let stepTitleText = '';
+      const stepMatch = questionText.match(/^Passo (.*?): (.*)/s);
+      if (stepMatch) {
+          stepTitleText = stepMatch[1];
+          questionText = stepMatch[2];
+      }
+      
+      const hasTitle = blockData.title || false;
+      const isStep = blockData.isStep || blockData.stepId;
+      const hasGlobalId = blockData.globalId;
+      const hasGroupId = blockData.groupId;
+
+      blockDiv.innerHTML = `
+        <div class="block-options-grid">
+            <div>
+                <div class="block-checkbox-group">
+                    <input type="checkbox" id="is-step-by-step-${blockCounter}" data-type="is-step-by-step" ${stepTitleText ? 'checked' : ''}>
+                    <label for="is-step-by-step-${blockCounter}">É um passo a passo?</label>
+                </div>
+                <div class="form-field" style="display: ${stepTitleText ? 'block' : 'none'};">
+                    <input type="text" id="step-title-text-${blockCounter}" data-type="step-title-text" placeholder="Ex: 1, 2, A" value="${stepTitleText}" autocomplete="off">
+                </div>
+            </div>
+            <div>
+                <div class="block-checkbox-group">
+                    <input type="checkbox" id="has-title-${blockCounter}" data-type="has-title" ${hasTitle ? 'checked' : ''}>
+                    <label for="has-title-${blockCounter}">Precisa de um título?</label>
+                </div>
+                <div class="form-field" style="display: ${hasTitle ? 'block' : 'none'};">
+                    <input type="text" id="question-title-${blockCounter}" data-type="question-title" placeholder="Título do Bloco" value="${blockData.title || ''}" autocomplete="off">
+                </div>
+            </div>
+            <div>
+                <div class="block-checkbox-group">
+                    <input type="checkbox" id="is-step-${blockCounter}" data-type="is-step" ${isStep ? 'checked' : ''}>
+                    <label for="is-step-${blockCounter}">É um passo com referência?</label>
+                </div>
+                <div class="form-field" style="display: ${isStep ? 'block' : 'none'};">
+                    <input type="text" id="step-id-${blockCounter}" data-type="step-id" placeholder="ID da Pergunta (p1, o1)" value="${blockData.stepId || ''}" autocomplete="off">
+                </div>
+            </div>
+            <div>
+                <div class="block-checkbox-group">
+                    <input type="checkbox" id="has-global-id-interactive-${blockCounter}" data-type="has-global-id" ${hasGlobalId ? 'checked' : ''}>
+                    <label for="has-global-id-interactive-${blockCounter}">Adicionar ID Global?</label>
+                </div>
+                <div class="form-field" style="display: ${hasGlobalId ? 'block' : 'none'};">
+                    <input type="text" id="global-id-interactive-${blockCounter}" data-type="global-id" placeholder="ID para links diretos" value="${blockData.globalId || ''}" autocomplete="off">
+                </div>
+            </div>
+            <div>
+                <div class="block-checkbox-group">
+                    <input type="checkbox" id="has-group-id-interactive-${blockCounter}" data-type="has-group-id" ${hasGroupId ? 'checked' : ''}>
+                    <label for="has-group-id-interactive-${blockCounter}">Agrupar este bloco?</label>
+                </div>
+                <div class="form-field" style="display: ${hasGroupId ? 'block' : 'none'};">
+                    <input type="text" id="group-id-interactive-${blockCounter}" data-type="group-id" placeholder="ID do Grupo" value="${blockData.groupId || ''}" autocomplete="off">
+                </div>
+            </div>
+        </div>
+        <div class="form-field">
+            <label for="question-${blockCounter}">Pergunta Interativa:</label>
+            <input type="text" id="question-${blockCounter}" data-type="interactive-question" required placeholder="Ex: O cliente foi legal?" value="${questionText}" autocomplete="off">
+        </div>
+        <div class="interactive-grid">
+            <div class="form-field">
+                <label for="sim-content-${blockCounter}">Conteúdo SIM:</label>
+                <textarea id="sim-content-${blockCounter}" data-type="interactive-sim" required autocomplete="off"></textarea>
+                <button type="button" class="styled-button add-modal-button" style="margin-top: 0.5rem;" data-target-textarea="sim-content-${blockCounter}">Add Modal</button>
+            </div>
+            <div class="form-field">
+                <label for="nao-content-${blockCounter}">Conteúdo NÃO:</label>
+                <textarea id="nao-content-${blockCounter}" data-type="interactive-nao" required autocomplete="off"></textarea>
+                <button type="button" class="styled-button add-modal-button" style="margin-top: 0.5rem;" data-target-textarea="nao-content-${blockCounter}">Add Modal</button>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+            <button type="button" class="styled-button remove-block-button">Remover</button>
+        </div>
+      `;
+      contentBlocksContainer.appendChild(blockDiv);
+      setupInteractiveBlockListeners(blockDiv, blockData);
+    }
+    
+    function setupInteractiveBlockListeners(blockDiv, blockData) {
+        if (blockData.sections && blockData.sections.length > 0) {
+            blockDiv.querySelector(`#sim-content-${blockCounter}`).value = blockData.sections[0].simContent || '';
+            blockDiv.querySelector(`#nao-content-${blockCounter}`).value = blockData.sections[0].naoContent || '';
+        }
+
+        const isStepByStepCheckbox = blockDiv.querySelector(`input[data-type="is-step-by-step"]`);
+        const stepTitleContainer = blockDiv.querySelector(`input[data-type="step-title-text"]`).parentElement;
+        const hasTitleCheckbox = blockDiv.querySelector(`input[data-type="has-title"]`);
+        const titleContainer = blockDiv.querySelector(`input[data-type="question-title"]`).parentElement;
+        
+        isStepByStepCheckbox.addEventListener('change', () => {
+            stepTitleContainer.style.display = isStepByStepCheckbox.checked ? 'block' : 'none';
+            if (!isStepByStepCheckbox.checked) stepTitleContainer.querySelector('input').value = '';
+        });
+
+        hasTitleCheckbox.addEventListener('change', () => {
+            titleContainer.style.display = hasTitleCheckbox.checked ? 'block' : 'none';
+            if (!hasTitleCheckbox.checked) titleContainer.querySelector('input').value = '';
+        });
+
+        const isStepCheckbox = blockDiv.querySelector(`input[data-type="is-step"]`);
+        const stepIdContainer = blockDiv.querySelector(`input[data-type="step-id"]`).parentElement;
+        isStepCheckbox.addEventListener('change', () => {
+            stepIdContainer.style.display = isStepCheckbox.checked ? 'block' : 'none';
+            if (!isStepCheckbox.checked) stepIdContainer.querySelector('input').value = '';
+        });
+
+        const hasGlobalIdCheckbox = blockDiv.querySelector(`input[data-type="has-global-id"]`);
+        const globalIdContainer = blockDiv.querySelector(`input[data-type="global-id"]`).parentElement;
+        hasGlobalIdCheckbox.addEventListener('change', () => {
+            globalIdContainer.style.display = hasGlobalIdCheckbox.checked ? 'block' : 'none';
+            if (!hasGlobalIdCheckbox.checked) globalIdContainer.querySelector('input').value = '';
+        });
+        
+        const hasGroupIdCheckbox = blockDiv.querySelector(`input[data-type="has-group-id"]`);
+        const groupIdContainer = blockDiv.querySelector(`input[data-type="group-id"]`).parentElement;
+        hasGroupIdCheckbox.addEventListener('change', () => {
+            groupIdContainer.style.display = hasGroupIdCheckbox.checked ? 'block' : 'none';
+            if (!hasGroupIdCheckbox.checked) groupIdContainer.querySelector('input').value = '';
+        });
+        
+        addRemoveBlockListener(blockDiv);
+        blockDiv.querySelectorAll('.add-modal-button').forEach(addModalButtonListener);
+    }
+
+    function addRemoveBlockListener(blockDiv) {
+        blockDiv.querySelector('.remove-block-button').addEventListener('click', () => {
+            blockDiv.remove();
+            if (modalDefinitionsContainer.children.length <= 1) {
+                modalDefinitionsContainer.style.display = 'none';
+                modalDefinitionsContainer.classList.remove('show');
+            }
+        });
+    }
+
+    function addModalButtonListener(button) {
+        button.addEventListener('click', () => {
+            modalCounter++;
+            const modalId = `modal_${Date.now()}_${modalCounter}`;
+            const targetTextareaId = button.dataset.targetTextarea;
+            const targetTextarea = document.getElementById(targetTextareaId);
+            const modalDefDiv = document.createElement('div');
+            modalDefDiv.className = 'modal-definition-block';
+            modalDefDiv.innerHTML = `
+                <button type="button" class="remove-modal-def-button" data-modal-id="${modalId}">&times;</button>
+                <div class="form-field">
+                    <label>ID do Modal (referência):</label>
+                    <input type="text" value="${modalId}" readonly>
+                </div>
+                <div class="form-field">
+                    <label for="modal-btn-text-${modalId}">Texto do Botão:</label>
+                    <input type="text" id="modal-btn-text-${modalId}" data-modal-btn-text="${modalId}" placeholder="Ex: Ver Mais, Detalhes" autocomplete="off">
+                </div>
+                <div class="form-field">
+                    <label for="modal-content-${modalId}">Conteúdo do Modal:</label>
+                    <textarea id="modal-content-${modalId}" data-modal-content="${modalId}" required autocomplete="off"></textarea>
+                </div>
+            `;
+            modalDefinitionsContainer.appendChild(modalDefDiv);
+            modalDefinitionsContainer.style.display = 'block';
+            modalDefinitionsContainer.classList.add('show');
+
+            if (targetTextarea) {
+                targetTextarea.value += `\n[MODAL_REF:${modalId}]\n`;
+            }
+
+            modalDefDiv.querySelector('.remove-modal-def-button').addEventListener('click', () => modalDefDiv.remove());
+        });
+    }
+
+    function populateFormForEdit(data) {
+        resetForm();
+        document.getElementById('categoria').value = data.Categoria;
+        document.getElementById('topico').value = data.Topico;
+        document.getElementById('assunto').value = data.Assunto;
+        
+        try {
+            const parsedInfo = JSON.parse(data.Informacao);
+            if (parsedInfo.contentBlocks) {
+                parsedInfo.contentBlocks.forEach(block => {
+                    if (block.type === 'text') {
+                        addTextBlock(block.content, block.textBlockId, block.globalId, block.groupId);
+                    } else if (block.type === 'interactive') {
+                        addInteractiveBlock(block);
+                    }
+                });
+            }
+            if (parsedInfo.modalDefinitions) {
+                for (const modalId in parsedInfo.modalDefinitions) {
+                    const modalData = parsedInfo.modalDefinitions[modalId];
+                    if (typeof modalData === 'string') {
+                        addExistingModalDefinition(modalId, modalData, 'Ver Mais');
+                    } else if (typeof modalData === 'object' && modalData !== null) {
+                        addExistingModalDefinition(modalId, modalData.content, modalData.buttonText);
+                    }
+                }
+            }
+        } catch (e) {
+            addTextBlock(data.Informacao);
+        }
+    }
+
+    function addExistingModalDefinition(modalId, modalContent, buttonText = 'Ver Mais') {
+        modalCounter++;
+        const modalDefDiv = document.createElement('div');
+        modalDefDiv.className = 'modal-definition-block';
+        modalDefDiv.innerHTML = `
+            <button type="button" class="remove-modal-def-button" data-modal-id="${modalId}">&times;</button>
+            <div class="form-field"><label>ID do Modal:</label><input type="text" value="${modalId}" readonly></div>
+            <div class="form-field"><label for="modal-btn-text-${modalId}">Texto do Botão:</label><input type="text" id="modal-btn-text-${modalId}" data-modal-btn-text="${modalId}" value="${buttonText}" autocomplete="off"></div>
+            <div class="form-field"><label for="modal-content-${modalId}">Conteúdo:</label><textarea id="modal-content-${modalId}" data-modal-content="${modalId}" autocomplete="off">${modalContent || ''}</textarea></div>
+        `;
+        modalDefinitionsContainer.appendChild(modalDefDiv);
+        modalDefinitionsContainer.style.display = 'block';
+        modalDefinitionsContainer.classList.add('show');
+        modalDefDiv.querySelector('.remove-modal-def-button').addEventListener('click', () => modalDefDiv.remove());
+    }
+
+    loadForEditButton.addEventListener('click', () => {
+        const lineNumber = parseInt(lineNumberInput.value, 10);
+        if (isNaN(lineNumber) || lineNumber < 2) return showMessage('Por favor, insira um número de linha válido (> 1).', true);
+        showMessage(`Carregando linha ${lineNumber}...`, false);
+        google.script.run
+            .withSuccessHandler((data) => {
+                if (data) {
+                    populateFormForEdit(data);
+                    hiddenRowIndex.value = lineNumber;
+                    formTitle.textContent = `Editando Linha: ${lineNumber}`;
+                    showMessage(`Dados da linha ${lineNumber} carregados!`);
+                } else {
+                    showMessage(`Nenhum dado encontrado na linha ${lineNumber}.`, true);
+                    resetForm();
+                }
+            })
+            .withFailureHandler((error) => showMessage('Erro ao carregar: ' + error.message, true))
+            .getPainelDataByLineNumber(lineNumber);
+    });
+
+    addTextBlockButton.addEventListener('click', () => addTextBlock());
+    addInteractiveBlockButton.addEventListener('click', () => addInteractiveBlock());
+
+    registerForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const formData = {
+        categoria: document.getElementById('categoria').value,
+        topico: document.getElementById('topico').value,
+        assunto: document.getElementById('assunto').value,
+      };
+
+      const contentBlocks = Array.from(contentBlocksContainer.querySelectorAll('.content-block-item')).map(blockDiv => {
+          if (blockDiv.classList.contains('interactive-block')) {
+            const isStepByStepCheckbox = blockDiv.querySelector('input[data-type="is-step-by-step"]');
+            const hasTitleCheckbox = blockDiv.querySelector('input[data-type="has-title"]');
+            const isStepCheckbox = blockDiv.querySelector('input[data-type="is-step"]');
+            const hasGlobalIdCheckbox = blockDiv.querySelector('input[data-type="has-global-id"]');
+            const hasGroupIdCheckbox = blockDiv.querySelector(`input[data-type="has-group-id"]`);
+            
+            let finalTitle = null;
+            if (hasTitleCheckbox.checked) {
+                finalTitle = blockDiv.querySelector('input[data-type="question-title"]').value;
+            }
+
+            let questionText = blockDiv.querySelector('input[data-type="interactive-question"]').value;
+            if (isStepByStepCheckbox.checked) {
+                const stepText = blockDiv.querySelector('input[data-type="step-title-text"]').value;
+                if (stepText) {
+                    questionText = "Passo " + stepText + ": " + questionText;
+                }
+            }
+
+            return {
+              type: 'interactive',
+              isStep: isStepCheckbox.checked,
+              stepId: isStepCheckbox.checked ? blockDiv.querySelector('input[data-type="step-id"]').value : null,
+              title: finalTitle,
+              globalId: hasGlobalIdCheckbox.checked ? blockDiv.querySelector('input[data-type="global-id"]').value : null,
+              groupId: hasGroupIdCheckbox.checked ? blockDiv.querySelector('input[data-type="group-id"]').value : null,
+              sections: [{
+                questionText: questionText,
+                simContent: blockDiv.querySelector('textarea[data-type="interactive-sim"]').value,
+                naoContent: blockDiv.querySelector('textarea[data-type="interactive-nao"]').value
+              }]
+            };
+          } else {
+            const isTextBlockIdCheckbox = blockDiv.querySelector('input[data-type="is-text-block-id"]');
+            const hasGlobalIdCheckbox = blockDiv.querySelector('input[data-type="has-global-id"]');
+            const hasGroupIdCheckbox = blockDiv.querySelector(`input[data-type="has-group-id"]`);
+            return {
+              type: 'text',
+              content: blockDiv.querySelector('textarea[data-type="text"]').value,
+              textBlockId: isTextBlockIdCheckbox.checked ? blockDiv.querySelector('input[data-type="text-block-id"]').value : null,
+              globalId: hasGlobalIdCheckbox.checked ? blockDiv.querySelector('input[data-type="global-id"]').value : null,
+              groupId: hasGroupIdCheckbox.checked ? blockDiv.querySelector('input[data-type="group-id"]').value : null
+            };
+          }
+      });
+      
+      const modalDefinitions = {};
+      modalDefinitionsContainer.querySelectorAll('.modal-definition-block').forEach(modalDefDiv => {
+          const id = modalDefDiv.querySelector('input[readonly]').value;
+          modalDefinitions[id] = {
+              content: modalDefDiv.querySelector(`textarea[data-modal-content="${id}"]`).value,
+              buttonText: modalDefDiv.querySelector(`input[data-modal-btn-text="${id}"]`).value || 'Ver Mais'
+          };
+      });
+
+      formData.informacao = JSON.stringify({ contentBlocks, modalDefinitions });
+      showMessage('Salvando dados...', false);
+      const rowToUpdate = hiddenRowIndex.value || null;
+
+      google.script.run
+        .withSuccessHandler((response) => {
+          if (response.success) {
+            showMessage(response.message);
+            resetForm();
+          } else {
+            showMessage(response.message, true);
+          }
+        })
+        .withFailureHandler((error) => showMessage('Erro ao salvar: ' + error.message, true))
+        .saveOrUpdateDataToSheet(rowToUpdate, formData);
+    });
+  </script>
+</body>
+</html>
