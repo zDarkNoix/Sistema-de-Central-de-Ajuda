@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <title>Painel de Informações</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-color-dark: #0d1117;
+      --bg-color-light: #161b22;
+      --border-color: #30363d;
+      --primary-text-color: #c9d1d9;
+      --secondary-text-color: #8b949e;
+      --accent-glow: rgba(88, 166, 255, 0.5);
+      --font-family-main: 'Poppins', sans-serif;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes rgb-glow {
+      0%   { box-shadow: 0 0 15px 4px rgba(255, 0, 255, 0.7); }
+      20%  { box-shadow: 0 0 15px 4px rgba(0, 255, 255, 0.7); }
+      40%  { box-shadow: 0 0 15px 4px rgba(0, 255, 0, 0.7); }
+      60%  { box-shadow: 0 0 15px 4px rgba(255, 255, 0, 0.7); }
+      80%  { box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.7); }
+      100% { box-shadow: 0 0 15px 4px rgba(255, 0, 255, 0.7); }
+    }
+    
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-color-dark); }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #58a6ff; }
+
+    body {
+      font-family: var(--font-family-main);
+      background-color: var(--bg-color-dark);
+      color: var(--primary-text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+      background-image: radial-gradient(circle at 1px 1px, var(--border-color) 1px, transparent 0);
+      background-size: 20px 20px;
+      overflow: hidden; /* Evita scroll no body */
+    }
+
+    #app {
+      width: 100%;
+      max-width: 1200px;
+      height: 95vh;
+      background: rgba(22, 27, 34, 0.85);
+      backdrop-filter: blur(10px) saturate(180%);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: fadeIn 0.7s ease-out;
+    }
+
+    #scrollableContent {
+      overflow-y: auto;
+      flex-grow: 1;
+      padding-right: 10px;
+    }
+
+    #fixedHeader {
+      position: sticky;
+      top: 0;
+      background: transparent;
+      z-index: 100;
+      padding-bottom: 1rem;
+    }
+
+    #fixedHeader h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      text-align: center;
+      color: #ffffff;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #338dff, #9955ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #navigationButtonsContainer {
+        display: none;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    #navigationButtonsContainer.show { display: flex; }
+    
+    #navigationButtonsContainer button {
+        background: var(--bg-color-light);
+        color: var(--primary-text-color);
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    #navigationButtonsContainer button:hover {
+        background: #58a6ff;
+        color: var(--bg-color-dark);
+        border-color: #58a6ff;
+    }
+
+    #searchContainer { position: relative; }
+    #searchInput {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-color-light);
+        color: var(--primary-text-color);
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+    #searchInput:focus {
+        outline: none;
+        border-color: #58a6ff;
+        box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    #searchContainer svg {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--secondary-text-color);
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+    
+    #searchScopeSelector {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        padding: 0.75rem;
+        margin-top: 0.75rem;
+        background-color: rgba(0,0,0,0.2);
+        border-radius: 0.5rem;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, padding 0.4s ease-in-out;
+    }
+    #searchScopeSelector.show {
+        max-height: 100px;
+        opacity: 1;
+        padding: 0.75rem;
+    }
+    .scope-button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--primary-text-color);
+    }
+    .traffic-light {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .traffic-light.active {
+        background-color: #238636;
+        box-shadow: 0 0 8px rgba(35, 134, 54, 0.7);
+    }
+    .traffic-light.inactive {
+        background-color: #da3633;
+        box-shadow: 0 0 8px rgba(218, 54, 51, 0.7);
+    }
+
+    #mainPanel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      padding: 1rem;
+    }
+
+    #mainPanel button {
+      background: linear-gradient(135deg, #1f6feb, #9f55ff);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    #mainPanel button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    #mainPanel button:hover::before { left: 100%; }
+    #mainPanel button:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(31, 111, 235, 0.3);
+    }
+
+    #topicsPanel, #subjectsPanel, #searchResultsPanel { display: none; }
+
+    #topicsHeader, #subjectsHeader, #searchResultsHeader {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    #topicsHeader span, #subjectsHeader span {
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    #topicsHeader span:hover, #subjectsHeader span:hover { color: #58a6ff; }
+
+    #topicsList, #subjectsList, #searchResultsList {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .topic-button, .subject-button, .search-result-item {
+      background: var(--bg-color-light);
+      border: 1px solid var(--border-color);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .topic-button:hover, .subject-button:hover, .search-result-item:hover {
+      border-color: #58a6ff;
+      background-color: rgba(88, 166, 255, 0.1);
+      transform: translateX(5px);
+    }
+
+    #infoPanel { display: none; }
+    
+    #infoSubject {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 1rem;
+    }
+    #infoSubject span {
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    #infoSubject span:hover { color: #58a6ff; }
+
+    #infoContent {
+      background-color: transparent;
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    
+    .content-group-container {
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      background-color: rgba(0,0,0,0.15);
+    }
+    .content-group-container .content-group-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--secondary-text-color);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px dashed var(--border-color);
+    }
+
+    #infoContent p.content-paragraph { margin-bottom: 1rem; }
+    #infoContent ul, #infoContent ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    #infoContent strong { 
+      font-weight: 700; 
+      color: #ffffff; 
+    }
+    #infoContent pre {
+      background-color: var(--bg-color-dark);
+      border: 1px solid var(--border-color);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    #infoContent a.internal-link {
+        color: #79c0ff;
+        text-decoration: underline;
+        text-decoration-style: dotted;
+        text-underline-offset: 3px;
+        font-weight: 600;
+        transition: color 0.2s ease, text-decoration-color 0.2s ease;
+    }
+    #infoContent a.internal-link:hover { 
+        color: #a5d6ff;
+        text-decoration-color: #a5d6ff;
+    }
+    #infoContent img {
+        max-width: 100%;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        border: 1px solid var(--border-color);
+    }
+
+    .interactive-section {
+      background: rgba(33, 38, 45, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      transition: box-shadow 0.3s ease;
+    }
+    .interactive-section:hover { box-shadow: 0 0 15px rgba(88, 166, 255, 0.1); }
+    .highlight-gradient {
+        animation: rgb-glow 2.5s linear;
+        border-radius: 0.75rem;
+    }
+
+    p.interactive-block-title {
+        font-weight: 700;
+        color: #ffffff;
+        font-size: 1.2rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    p.interactive-question-text {
+      font-weight: 600;
+      color: var(--primary-text-color);
+      background-color: var(--bg-color-light);
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
+      border-left: 3px solid #58a6ff;
+    }
+    .answer-buttons-container {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    button.answer-button {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #ffffff;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    button.answer-button.sim { background-color: #238636; }
+    button.answer-button.nao { background-color: #da3633; }
+    button.answer-button:hover { transform: translateY(-2px); }
+    button.answer-button.selected {
+      transform: scale(1.02);
+      box-shadow: 0 0 0 2px var(--bg-color-dark), 0 0 0 4px;
+    }
+    button.answer-button.sim.selected { box-shadow: 0 0 0 2px var(--bg-color-dark), 0 0 0 4px #3fb950; }
+    button.answer-button.nao.selected { box-shadow: 0 0 0 2px var(--bg-color-dark), 0 0 0 4px #f85149; }
+    .answer-content {
+      display: none;
+      background-color: var(--bg-color-dark);
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-top: 0.75rem;
+      border: 1px solid var(--border-color);
+      animation: fadeIn 0.4s ease;
+    }
+    .answer-content.show { display: block; }
+    
+    #modalOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      animation: fadeIn 0.3s;
+    }
+    #modalContainer {
+      background: var(--bg-color-light);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      padding: 5rem;
+      max-width: 900px;
+      width: 90%;
+      position: relative;
+    }
+    #modalCloseButton {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      background: transparent;
+      border: none;
+      color: var(--secondary-text-color);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    #modalCloseButton:hover { color: #ffffff; }
+    #modalTitle {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.3rem;
+      text-align: center;
+    }
+    #modalContent {
+      font-size: 1.1rem;
+      line-height: 2.6;
+      max-height: 95vh;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    button.modal-reference-button {
+        background-color: transparent;
+        color: #79c0ff;
+        border: 1px solid #79c0ff;
+        font-weight: 600;
+        padding: 0.3rem 0.6rem;
+        border-radius: 99px;
+        margin-left: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    button.modal-reference-button:hover {
+        background-color: #79c0ff;
+        color: var(--bg-color-dark);
+    }
+    
+    #messageBox {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-color-light);
+      color: var(--primary-text-color);
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      z-index: 3000;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      border: 1px solid var(--border-color);
+    }
+    #messageBox.error {
+        background-color: #da3633;
+        color: #ffffff;
+        border-color: #da3633;
+    }
+
+    #chat-fab-button {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background-color: #58a6ff;
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+        z-index: 1500;
+    }
+    #chat-fab-button:hover {
+        transform: scale(1.1);
+    }
+    #chat-fab-button.is-open {
+        background-color: #da3633;
+    }
+    #chat-fab-button svg {
+        width: 32px;
+        height: 32px;
+        transition: transform 0.3s ease;
+    }
+    #chat-fab-button.is-open svg {
+        transform: rotate(45deg);
+    }
+
+    #chat-overlay-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 100%;
+        max-width: 550px;
+        height: 100%;
+        background: var(--bg-color-dark);
+        border-left: 1px solid var(--border-color);
+        box-shadow: -5px 0 25px rgba(0,0,0,0.5);
+        transform: translateX(100%);
+        transition: transform 0.4s ease-in-out;
+        z-index: 1400;
+        display: flex;
+        flex-direction: column;
+    }
+    #chat-overlay-panel.show {
+        transform: translateX(0);
+    }
+    #chat-overlay-header {
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-color-light);
+    }
+    #chat-overlay-header h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    #chat-close-button {
+        background: transparent;
+        border: none;
+        color: var(--secondary-text-color);
+        font-size: 1.75rem;
+        cursor: pointer;
+        transition: color 0.2s ease;
+        display: none;
+    }
+    #chat-overlay-content {
+        padding: 1.5rem;
+        overflow-y: auto;
+        flex-grow: 1;
+    }
+    .chat-inputs-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        background-color: rgba(88, 166, 255, 0.05);
+        border-top: 1px solid var(--border-color);
+    }
+    .chat-inputs-container label {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    .chat-inputs-container input {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-color-dark);
+        color: var(--primary-text-color);
+    }
+    #fixedFooter {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      height: 30px;
+  
+      background: rgba(22, 27, 34, 0.85);
+      backdrop-filter: blur(10px) saturate(180%);
+      border-top: 1px solid var(--border-color);
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+      border-radius: 0 0 1rem 1rem;
+
+      color: #ffffff;
+      font-size: 12px;
+      font-family: var(--font-family-main);
+      text-align: center;
+
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 2px;
+      margin: 0;
+      overflow: hidden;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="messageBox"></div>
+
+  <div id="app">
+    <div id="fixedHeader">
+        <h1>Painel Principal - Fagner Gomes de Lima</h1>
+        <div id="navigationButtonsContainer">
+            <button id="backButton">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                Voltar
+            </button>
+            <button id="homeButton">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clip-rule="evenodd" /></svg>
+                INÍCIO
+            </button>
+        </div>
+        <div id="searchContainer">
+            <input type="text" id="searchInput" placeholder="Pesquisar por assuntos..." autocomplete="off">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </div>
+        <div id="searchScopeSelector">
+            <div class="scope-button" data-scope="topicos">
+                <div class="traffic-light active"></div>
+                <span>Tópicos</span>
+            </div>
+            <div class="scope-button" data-scope="assuntos">
+                <div class="traffic-light active"></div>
+                <span>Assuntos</span>
+            </div>
+            <div class="scope-button" data-scope="conteudo">
+                <div class="traffic-light active"></div>
+                <span>Perguntas</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="scrollableContent">
+      <div id="mainPanel">
+        <button onclick="showCategory('B-SIDE')">B-SIDE</button>
+        <button onclick="showCategory('C-SIDE')">C-SIDE</button>
+        <button onclick="showCategory('D-SIDE')">D-SIDE</button>
+        <button onclick="showCategory('OUTROS')">OUTROS</button>
+      </div>
+      <div id="searchResultsPanel"><h2 id="searchResultsHeader">Resultados da Pesquisa</h2><div id="searchResultsList"></div></div>
+      <div id="topicsPanel"><h2 id="topicsHeader"></h2><div id="topicsList"></div></div>
+      <div id="subjectsPanel"><h2 id="subjectsHeader"></h2><div id="subjectsList"></div></div>
+      <div id="infoPanel"><h2 id="infoSubject"></h2><div id="infoContent"></div></div>
+    </div>
+  </div>
+
+  <button id="chat-fab-button">
+    <svg id="chat-fab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+    </svg>
+  </button>
+  
+  <div id="chat-overlay-panel">
+    <div id="chat-overlay-header">
+        <h2 id="chat-overlay-title">MACROS</h2>
+        <button id="chat-close-button">&times;</button>
+    </div>
+    <div id="chat-overlay-content">
+    </div>
+    <div class="chat-inputs-container">
+        <div>
+            <label for="chat-clientNameInput">Nome do Cliente:</label>
+            <input type="text" id="chat-clientNameInput" placeholder="Digite o nome do cliente..." autocomplete="off">
+        </div>
+        <div>
+            <label for="chat-analystNameInput">Nome do Analista:</label>
+            <input type="text" id="chat-analystNameInput" placeholder="Seu nome..." autocomplete="off">
+        </div>
+    </div>
+  </div>
+
+    <footer id="fixedFooter">
+      <p>© 2025 Fagner Gomes de Lima. Todos os direitos reservados.</p>
+    </footer>
+
+  <div id="modalOverlay">
+    <div id="modalContainer">
+      <button id="modalCloseButton">&times;</button>
+      <h3 id="modalTitle"></h3>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    let allData = [];
+    let contentCache = {};
+    let currentCategory = null;
+    let currentTopic = null;
+    let currentSubject = null;
+    let currentModalDefinitions = {};
+    let viewState = 'main';
+    
+    let chatState = { view: 'topics', topic: null, subject: null };
+
+    const mainPanel = document.getElementById('mainPanel');
+    const topicsPanel = document.getElementById('topicsPanel');
+    const topicsHeader = document.getElementById('topicsHeader');
+    const topicsList = document.getElementById('topicsList');
+    const subjectsPanel = document.getElementById('subjectsPanel');
+    const subjectsHeader = document.getElementById('subjectsHeader');
+    const subjectsList = document.getElementById('subjectsList');
+    const infoPanel = document.getElementById('infoPanel');
+    const infoSubject = document.getElementById('infoSubject');
+    const infoContent = document.getElementById('infoContent');
+    const navigationButtonsContainer = document.getElementById('navigationButtonsContainer');
+    const backButton = document.getElementById('backButton');
+    const homeButton = document.getElementById('homeButton');
+    const messageBox = document.getElementById('messageBox');
+    const searchInput = document.getElementById('searchInput');
+    const searchScopeSelector = document.getElementById('searchScopeSelector');
+    const searchResultsPanel = document.getElementById('searchResultsPanel');
+    const searchResultsList = document.getElementById('searchResultsList');
+    
+    const chatFabButton = document.getElementById('chat-fab-button');
+    const chatFabIcon = document.getElementById('chat-fab-icon');
+    const chatOverlayPanel = document.getElementById('chat-overlay-panel');
+    const chatOverlayContent = document.getElementById('chat-overlay-content');
+    const chatOverlayTitle = document.getElementById('chat-overlay-title');
+    const chatClientNameInput = document.getElementById('chat-clientNameInput');
+    const chatAnalystNameInput = document.getElementById('chat-analystNameInput');
+    
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalCloseButton = document.getElementById('modalCloseButton');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalContent = document.getElementById('modalContent');
+
+    const chatIconSVG = `<path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />`;
+    const closeIconSVG = `<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />`;
+
+
+    function debounce(func, delay) {
+      let timeoutId;
+      return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => { func.apply(this, args); }, delay);
+      };
+    }
+
+    function showMessage(message, isError = false) {
+      messageBox.textContent = message;
+      messageBox.className = (isError ? 'error' : '');
+      messageBox.style.display = 'block';
+      void messageBox.offsetWidth;
+      messageBox.style.opacity = 1;
+      messageBox.style.transform = 'translateX(-50%) translateY(0)';
+      setTimeout(() => {
+        messageBox.style.opacity = 0;
+        messageBox.style.transform = 'translateX(-50%) translateY(20px)';
+        setTimeout(() => { messageBox.style.display = 'none'; }, 500);
+      }, 3500);
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      hideAllPanels();
+      mainPanel.style.display = 'grid';
+      loadData();
+      
+      const debouncedSearch = debounce(performSearch, 300);
+      searchInput.addEventListener('keyup', debouncedSearch);
+      searchInput.addEventListener('focus', () => {
+          searchScopeSelector.classList.add('show');
+      });
+      searchInput.addEventListener('click', () => {
+          searchInput.value = '';
+      });
+      document.addEventListener('click', (e) => {
+          if (!document.getElementById('searchContainer').contains(e.target) && !searchScopeSelector.contains(e.target)) {
+              searchScopeSelector.classList.remove('show');
+          }
+      });
+
+      document.querySelectorAll('.scope-button').forEach(button => {
+          button.addEventListener('click', () => {
+              const light = button.querySelector('.traffic-light');
+              light.classList.toggle('active');
+              light.classList.toggle('inactive');
+              performSearch();
+          });
+      });
+
+      backButton.addEventListener('click', goBack);
+      homeButton.addEventListener('click', goToHome);
+      
+      modalCloseButton.addEventListener('click', hideModal);
+      modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) hideModal(); });
+
+      chatFabButton.addEventListener('click', () => {
+          const isOpening = !chatOverlayPanel.classList.contains('show');
+          toggleChatOverlay(isOpening);
+      });
+
+      const chatInputHandler = () => {
+          if (chatOverlayPanel.classList.contains('show')) {
+              switch (chatState.view) {
+                  case 'subjects': loadChatSubjects(chatState.topic); break;
+                  case 'info': loadChatInfo(chatState.subject); break;
+                  default: loadChatTopics(); break;
+              }
+          }
+      };
+      chatClientNameInput.addEventListener('input', chatInputHandler);
+      chatAnalystNameInput.addEventListener('input', chatInputHandler);
+    });
+
+    function toggleChatOverlay(show) {
+        chatOverlayPanel.classList.toggle('show', show);
+        chatFabButton.classList.toggle('is-open', show);
+        chatFabIcon.innerHTML = show ? closeIconSVG : chatIconSVG;
+        if (show && chatState.view === 'topics') {
+            loadChatTopics();
+        }
+    }
+    
+    function loadChatTopics() {
+        chatState.view = 'topics';
+        chatState.topic = null;
+        chatState.subject = null;
+        chatOverlayTitle.innerHTML = `MACROS`;
+        chatOverlayContent.innerHTML = '';
+        
+        const topics = [...new Set(allData.filter(item => item.Categoria === 'MACROS').map(item => item.Topico))];
+        if (topics.length === 0) {
+            chatOverlayContent.innerHTML = '<p>Nenhum tópico de MACROS encontrado.</p>';
+            return;
+        }
+        
+        const listContainer = document.createElement('div');
+        listContainer.className = 'topicsList';
+        topics.forEach(topic => {
+            const topicButton = document.createElement('div');
+            topicButton.className = 'topic-button';
+            topicButton.textContent = applyChatReplacements(topic);
+            topicButton.onclick = () => loadChatSubjects(topic);
+            listContainer.appendChild(topicButton);
+        });
+        chatOverlayContent.appendChild(listContainer);
+    }
+
+    function loadChatSubjects(topic) {
+        chatState.view = 'subjects';
+        chatState.topic = topic;
+        chatOverlayTitle.innerHTML = `<span style="cursor:pointer;" onclick="loadChatTopics()">MACROS</span> &gt; ${topic}`;
+        chatOverlayContent.innerHTML = '';
+
+        const subjects = [...new Set(allData.filter(item => item.Categoria === 'MACROS' && item.Topico === topic).map(item => item.Assunto))].sort();
+        if (subjects.length === 0) {
+            chatOverlayContent.innerHTML = '<p>Nenhum assunto encontrado.</p>';
+            return;
+        }
+        
+        const listContainer = document.createElement('div');
+        listContainer.className = 'subjectsList';
+        subjects.forEach(subject => {
+            const subjectButton = document.createElement('div');
+            subjectButton.className = 'subject-button';
+            subjectButton.textContent = applyChatReplacements(subject);
+            subjectButton.onclick = () => loadChatInfo(subject);
+            listContainer.appendChild(subjectButton);
+        });
+        chatOverlayContent.appendChild(listContainer);
+    }
+    
+    function loadChatInfo(subject) {
+        chatState.view = 'info';
+        chatState.subject = subject;
+        chatOverlayTitle.innerHTML = `<span style="cursor:pointer;" onclick="loadChatTopics()">MACROS</span> &gt; <span style="cursor:pointer;" onclick="loadChatSubjects(chatState.topic)">${chatState.topic}</span> &gt; Assunto`;
+        
+        const infoItem = allData.find(item => item.Categoria === 'MACROS' && item.Topico === chatState.topic && item.Assunto === subject);
+        
+        if(infoItem && infoItem.Informacao) {
+            try {
+                const parsedInfo = JSON.parse(infoItem.Informacao);
+                currentModalDefinitions = parsedInfo.modalDefinitions || {};
+                let contentToRender = '';
+                if(parsedInfo.contentBlocks && parsedInfo.contentBlocks.length > 0){
+                    contentToRender = parsedInfo.contentBlocks.map(block => block.content).join('\n\n');
+                }
+                chatOverlayContent.innerHTML = formatTextWithMarkdown(applyChatReplacements(contentToRender));
+            } catch(e) {
+                chatOverlayContent.innerHTML = formatTextWithMarkdown(applyChatReplacements(infoItem.Informacao));
+            }
+        } else {
+            chatOverlayContent.innerHTML = '<p>Informação não encontrada.</p>';
+        }
+    }
+
+    function hideAllPanels() {
+      mainPanel.style.display = 'none';
+      topicsPanel.style.display = 'none';
+      subjectsPanel.style.display = 'none';
+      infoPanel.style.display = 'none';
+      searchResultsPanel.style.display = 'none';
+    }
+
+    function loadData() {
+      showMessage('Carregando dados...', false);
+      google.script.run
+        .withSuccessHandler((data) => {
+          allData = data;
+          if (allData.length === 0) { showMessage('Nenhum dado encontrado.', true); } 
+          else { showMessage('Dados carregados com sucesso!'); }
+        })
+        .withFailureHandler((error) => showMessage('Erro ao carregar: ' + error.message, true))
+        .getPainelData();
+    }
+
+    function performSearch() {
+        const query = searchInput.value.toLowerCase().trim();
+        const searchInTopics = document.querySelector('[data-scope="topicos"] .traffic-light').classList.contains('active');
+        const searchInAssuntos = document.querySelector('[data-scope="assuntos"] .traffic-light').classList.contains('active');
+        const searchInConteudo = document.querySelector('[data-scope="conteudo"] .traffic-light').classList.contains('active');
+
+        if (query.length < 2) {
+            goToHome();
+            return;
+        }
+
+        hideAllPanels();
+        searchResultsPanel.style.display = 'block';
+        navigationButtonsContainer.classList.add('show');
+        viewState = 'search';
+        searchResultsList.innerHTML = '';
+        scrollableContent.scrollTop = 0;
+
+        const matchingResults = [];
+        allData.forEach(item => {
+            if (item.Categoria === 'MACROS') return;
+
+            let hasMatch = false;
+
+            if (searchInConteudo) {
+                try {
+                    const parsedInfo = JSON.parse(item.Informacao || '{}');
+                    if (parsedInfo.contentBlocks) {
+                        for (const block of parsedInfo.contentBlocks) {
+                            if (block.type === 'interactive' && block.sections) {
+                                for (const section of block.sections) {
+                                    if (section.questionText && section.questionText.toLowerCase().includes(query)) {
+                                        matchingResults.push({ ...item, displayType: 'question', displayText: section.questionText, blockTitle: block.title });
+                                        hasMatch = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }
+            
+            if (hasMatch) return;
+
+            if ( (searchInAssuntos && (item.Assunto || '').toLowerCase().includes(query)) || 
+                 (searchInTopics && (item.Topico || '').toLowerCase().includes(query)) ) {
+                hasMatch = true;
+            }
+
+            if(hasMatch){
+                const isAlreadyAdded = matchingResults.some(res => res.Assunto === item.Assunto && res.Topico === item.Topico && res.Categoria === item.Categoria);
+                if (!isAlreadyAdded) {
+                    matchingResults.push({ ...item, displayType: 'subject', displayText: item.Assunto });
+                }
+            }
+        });
+
+        if (matchingResults.length === 0) {
+            searchResultsList.innerHTML = '<p style="text-align: center; color: var(--secondary-text-color);">Nenhum resultado encontrado.</p>';
+        } else {
+             const uniqueResults = [...new Map(matchingResults.map(item => [`${item.Categoria}-${item.Topico}-${item.Assunto}-${item.displayText}`, item])).values()];
+            uniqueResults.forEach(item => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                
+                let resultHTML = `<span style="color: #58a6ff; font-weight: bold;">${item.Categoria}</span> &gt; <span style="color: #3fb950;">${item.Topico}</span> &gt; `;
+                
+                if (item.displayType === 'question') {
+                    resultHTML += `<span style="color: var(--primary-text-color);">${item.Assunto}</span> &gt; `;
+                    if (item.blockTitle) {
+                       resultHTML += `<span style="font-style: italic;">${item.blockTitle}</span> &gt; `;
+                    }
+                    resultHTML += `<span>Pergunta: "${item.displayText}"</span>`;
+                } else {
+                    resultHTML += `<span>${item.Assunto}</span>`;
+                }
+                
+                resultItem.innerHTML = resultHTML;
+                resultItem.onclick = () => {
+                    currentCategory = item.Categoria;
+                    currentTopic = item.Topico;
+                    showSubjectInfo(item.Assunto);
+                };
+                searchResultsList.appendChild(resultItem);
+            });
+        }
+    }
+
+
+    function showCategory(category) {
+      if (allData.length === 0) return showMessage('Dados não carregados.', true);
+      currentCategory = category;
+      viewState = 'topics';
+      hideAllPanels();
+      topicsPanel.style.display = 'block';
+      navigationButtonsContainer.classList.add('show');
+      topicsHeader.innerHTML = `<span onclick="goToHome()">INÍCIO</span> &gt; <span style="color: #ffffff;">${category}</span>`;
+      topicsList.innerHTML = '';
+      scrollableContent.scrollTop = 0;
+      const topics = [...new Set(allData.filter(item => item.Categoria === category).map(item => item.Topico))];
+      if (topics.length === 0) {
+        topicsList.innerHTML = '<p>Nenhum tópico encontrado.</p>';
+        return;
+      }
+      topics.forEach(topic => {
+        const topicButton = document.createElement('div');
+        topicButton.className = 'topic-button';
+        topicButton.textContent = topic;
+        topicButton.onclick = () => showTopic(topic);
+        topicsList.appendChild(topicButton);
+      });
+    }
+
+    function showTopic(topic) {
+      currentTopic = topic;
+      viewState = 'subjects';
+      hideAllPanels();
+      subjectsPanel.style.display = 'block';
+      navigationButtonsContainer.classList.add('show');
+      subjectsHeader.innerHTML = `<span onclick="goToHome()">INÍCIO</span> &gt; <span onclick="showCategory('${currentCategory}')">${currentCategory}</span> &gt; <span style="color: #ffffff;">${currentTopic}</span>`;
+      subjectsList.innerHTML = '';
+      scrollableContent.scrollTop = 0;
+      const subjects = [...new Set(allData.filter(item => item.Categoria === currentCategory && item.Topico === topic).map(item => item.Assunto))].sort();
+      if (subjects.length === 0) {
+        subjectsList.innerHTML = '<p>Nenhum assunto encontrado.</p>';
+        return;
+      }
+      subjects.forEach(subject => {
+        const subjectButton = document.createElement('div');
+        subjectButton.className = 'subject-button';
+        subjectButton.textContent = subject;
+        subjectButton.onclick = () => showSubjectInfo(subject);
+        subjectsList.appendChild(subjectButton);
+      });
+    }
+    
+    function getBlockIdHtml(block) {
+        const id = block.globalId || block.stepId || block.textBlockId;
+        return id ? `id="${id}"` : '';
+    }
+
+    function showSubjectInfo(subject) {
+        currentSubject = subject;
+        viewState = 'info';
+        hideAllPanels();
+        infoPanel.style.display = 'block';
+        navigationButtonsContainer.classList.add('show');
+        scrollableContent.scrollTop = 0;
+
+        const cacheKey = `${currentCategory}-${currentTopic}-${subject}`;
+        infoSubject.innerHTML = `<span onclick="goToHome()">INÍCIO</span> &gt; <span onclick="showCategory('${currentCategory}')">${currentCategory}</span> &gt; <span onclick="showTopic('${currentTopic}')">${currentTopic}</span> &gt; <span style="color: #ffffff;">${subject}</span>`;
+
+        if (contentCache[cacheKey]) {
+            const cachedData = contentCache[cacheKey];
+            infoContent.innerHTML = cachedData.html;
+            currentModalDefinitions = cachedData.modals;
+        } else {
+            const infoItem = allData.find(item => item.Categoria === currentCategory && item.Topico === currentTopic && item.Assunto === subject);
+            if (infoItem && infoItem.Informacao) {
+                try {
+                    const parsedInfo = JSON.parse(infoItem.Informacao);
+                    currentModalDefinitions = parsedInfo.modalDefinitions || {};
+                    let htmlResult = '';
+                    if (Array.isArray(parsedInfo.contentBlocks)) {
+                        let currentGroupId = null;
+                        parsedInfo.contentBlocks.forEach((block, index) => {
+                            const idAttribute = getBlockIdHtml(block);
+                            const hasNewGroup = block.groupId && block.groupId !== currentGroupId;
+                            const isEndingGroup = currentGroupId && (!block.groupId || block.groupId !== currentGroupId);
+
+                            if (isEndingGroup) {
+                                htmlResult += `</div>`;
+                            }
+                            if (hasNewGroup) {
+                                htmlResult += `<div class="content-group-container">`;
+                                htmlResult += `<div class="content-group-title">Grupo: ${block.groupId}</div>`;
+                                currentGroupId = block.groupId;
+                            }
+                            
+                            if (block.type === 'text') {
+                                htmlResult += `<div class="text-block" ${idAttribute}>${formatTextWithMarkdown(block.content)}</div>`;
+                            } else if (block.type === 'interactive' && block.sections) {
+                                block.sections.forEach((section, secIndex) => {
+                                    const uniqueId = `interactive-${index}-${secIndex}`;
+                                    htmlResult += `
+                                        <div class="interactive-section" ${idAttribute}>
+                                            ${block.title ? `<p class="interactive-block-title">${block.title}</p>` : ''}
+                                            <p class="interactive-question-text">${section.questionText}</p>
+                                            <div class="answer-buttons-container">
+                                                <button id="${uniqueId}-btn-sim" class="answer-button sim" onclick="toggleAnswer('${uniqueId}', 'sim')">Sim</button>
+                                                <button id="${uniqueId}-btn-nao" class="answer-button nao" onclick="toggleAnswer('${uniqueId}', 'nao')">Não</button>
+                                            </div>
+                                            <div id="${uniqueId}-sim-content" class="answer-content">${formatTextWithMarkdown(section.simContent)}</div>
+                                            <div id="${uniqueId}-nao-content" class="answer-content">${formatTextWithMarkdown(section.naoContent)}</div>
+                                        </div>`;
+                                });
+                            }
+                            
+                            const isLastBlock = index === parsedInfo.contentBlocks.length - 1;
+                            if (currentGroupId && (isEndingGroup || isLastBlock)) {
+                                if(!isEndingGroup) htmlResult += `</div>`;
+                                currentGroupId = null;
+                            }
+                        });
+                    }
+                    infoContent.innerHTML = htmlResult;
+                    contentCache[cacheKey] = { html: htmlResult, modals: currentModalDefinitions };
+                } catch (e) {
+                    infoContent.innerHTML = formatTextWithMarkdown(infoItem.Informacao);
+                    currentModalDefinitions = {};
+                }
+            } else {
+                infoContent.innerHTML = '<p>Informação não encontrada.</p>';
+            }
+        }
+        if (window.location.hash) scrollToElement(window.location.hash.substring(1));
+    }
+
+    function toggleAnswer(id, type) {
+      const simContent = document.getElementById(`${id}-sim-content`);
+      const naoContent = document.getElementById(`${id}-nao-content`);
+      const simBtn = document.getElementById(`${id}-btn-sim`);
+      const naoBtn = document.getElementById(`${id}-btn-nao`);
+      const isSimVisible = simContent.classList.contains('show');
+      const isNaoVisible = naoContent.classList.contains('show');
+      simContent.classList.remove('show');
+      naoContent.classList.remove('show');
+      simBtn.classList.remove('selected');
+      naoBtn.classList.remove('selected');
+      if (type === 'sim' && !isSimVisible) {
+        simContent.classList.add('show');
+        simBtn.classList.add('selected');
+      } else if (type === 'nao' && !isNaoVisible) {
+        naoContent.classList.add('show');
+        naoBtn.classList.add('selected');
+      }
+    }
+
+    function goBack() {
+      switch (viewState) {
+        case 'topics': goToHome(); break;
+        case 'subjects': showCategory(currentCategory); break;
+        case 'info':
+          (searchInput.value.trim() && viewState === 'info') ? performSearch() : showTopic(currentTopic);
+          break;
+        case 'search': goToHome(); break;
+      }
+    }
+
+    function goToHome() {
+      hideAllPanels();
+      mainPanel.style.display = 'grid';
+      navigationButtonsContainer.classList.remove('show');
+      viewState = 'main';
+      currentCategory = currentTopic = currentSubject = null;
+      searchInput.value = '';
+      scrollableContent.scrollTop = 0;
+    }
+
+    function formatTextWithMarkdown(text) {
+        if (!text) return '';
+        const escapeHtml = (unsafe) => unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const codeBlocks = [];
+        let processedText = text.replace(/```(\w+)?\n([\s\S]*?)\n```/g, (match, lang, codeContent) => {
+            const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+            codeBlocks.push(`<pre><code>${escapeHtml(codeContent)}</code></pre>`);
+            return placeholder;
+        });
+        const paragraphs = processedText.split(/(?:\r\n|\r|\n){2,}/);
+        const html = paragraphs.map(p => {
+            if (!p.trim()) return '';
+            const isUnorderedList = p.trim().startsWith('- ') || p.trim().startsWith('* ');
+            const isOrderedList = p.trim().match(/^\d+\.\s/);
+            if (isUnorderedList || isOrderedList) {
+                const listTag = isUnorderedList ? 'ul' : 'ol';
+                const items = p.split('\n').map(line => {
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine) return '';
+                    let itemContent = trimmedLine.replace(/^(\d+\.|-|\*)\s+/, '');
+                    itemContent = applyInlineFormatting(itemContent);
+                    return `<li>${itemContent}</li>`;
+                }).join('');
+                return `<${listTag}>${items}</${listTag}>`;
+            }
+            return `<p class="content-paragraph">${applyInlineFormatting(p)}</p>`;
+        }).join('');
+        return html.replace(/__CODE_BLOCK_(\d+)__/g, (match, index) => codeBlocks[parseInt(index, 10)]);
+    }
+
+    function navigateToGlobalId(globalId) {
+        let foundItem = null;
+        for (const item of allData) {
+            try {
+                const parsedInfo = JSON.parse(item.Informacao || '{}');
+                if (parsedInfo.contentBlocks && Array.isArray(parsedInfo.contentBlocks)) {
+                    const hasBlock = parsedInfo.contentBlocks.some(block => block.globalId === globalId);
+                    if (hasBlock) {
+                        foundItem = item;
+                        break;
+                    }
+                }
+            } catch (e) { }
+        }
+
+        if (foundItem) {
+            currentCategory = foundItem.Categoria;
+            currentTopic = foundItem.Topico;
+            showSubjectInfo(foundItem.Assunto);
+
+            setTimeout(() => {
+                scrollToElement(globalId);
+            }, 100); 
+
+        } else {
+            showMessage(`Link para o ID Global "${globalId}" não encontrado.`, true);
+        }
+    }
+
+    function applyInlineFormatting(text) {
+        return text
+            .replace(/\\n/g, '\n') 
+            .replace(/\[IMAGEM\]\((https?:\/\/[^\s\)]+)\)/g, '<img src="$1" alt="Imagem" onerror="this.src=\'https://placehold.co/600x400/CCCCCC/000000?text=Imagem+Indispon%C3%ADvel\'">')
+            .replace(/\[MODAL_REF:([^\]]+)\]/g, (match, modalId) => {
+                const modalInfo = currentModalDefinitions[modalId];
+                if (modalInfo) {
+                    const buttonText = (typeof modalInfo === 'object' && modalInfo.buttonText) ? modalInfo.buttonText : 'Ver Mais';
+                    return `<button class="modal-reference-button" onclick="showModal('${modalId}')">${buttonText}</button>`;
+                }
+                return `[Modal Inválido]`;
+            })
+            .replace(/{([^}]+)}\[([^\]]+)\]/g, (m, linkText, id) => `<a href="#" class="internal-link" onclick="navigateToGlobalId('${id}'); return false;">${linkText}</a>`)
+            .replace(/\(([^)]+)\)\[([^\]]+)\]/g, (m, linkText, id) => `<a href="#${id}" class="internal-link" onclick="scrollToElement('${id}'); return false;">${linkText}</a>`)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+    }
+
+    function showModal(modalId) {
+        const modalInfo = currentModalDefinitions[modalId];
+        let content = null;
+        if (modalInfo) {
+            if (typeof modalInfo === 'string') content = modalInfo;
+            else if (typeof modalInfo === 'object' && modalInfo.content) content = modalInfo.content;
+        }
+
+        if (content) {
+            modalTitle.textContent = `Informações Adicionais`;
+            modalContent.innerHTML = formatTextWithMarkdown(content);
+            modalOverlay.style.display = 'flex';
+        } else {
+            showMessage('Conteúdo do modal não encontrado!', true);
+        }
+    }
+
+    function hideModal() {
+      modalOverlay.style.display = 'none';
+    }
+
+    function scrollToElement(id) {
+        const element = document.getElementById(id);
+        if (element) {
+            const fixedHeaderHeight = document.getElementById('fixedHeader')?.offsetHeight || 0;
+            const elementRect = element.getBoundingClientRect();
+            const scrollableContentRect = document.querySelector('#scrollableContent').getBoundingClientRect();
+            const targetOffset = elementRect.top - scrollableContentRect.top + document.querySelector('#scrollableContent').scrollTop - fixedHeaderHeight - 20;
+            document.querySelector('#scrollableContent').scrollTo({ top: targetOffset, behavior: 'smooth' });
+            element.classList.add('highlight-gradient');
+            setTimeout(() => { element.classList.remove('highlight-gradient'); }, 3000);
+        } else {
+            showMessage(`Seção "${id}" não encontrada.`, true);
+        }
+    }
+
+    function getGreeting() {
+        const hour = new Date().getHours();
+        return (hour >= 5 && hour < 12) ? 'Bom dia' : (hour >= 12 && hour < 18) ? 'Boa tarde' : 'Boa noite';
+    }
+
+    function applyChatReplacements(text) {
+        if (!text) return text;
+        return text.replace(/\[NOMEDOCLIENTE\]/g, chatClientNameInput.value.trim() || '[NOMEDOCLIENTE]')
+                   .replace(/\[SEUNOME\]/g, chatAnalystNameInput.value.trim() || '[SEUNOME]')
+                   .replace(/\[BOMDIABOATARDE\]/g, getGreeting());
+    }
+  </script>
+</body>
+</html>
